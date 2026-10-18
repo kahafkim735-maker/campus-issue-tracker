@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Electronic Issue Reporting System</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js for Admin Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col font-sans">
+
+  <!-- Navigation Bar -->
+  <header class="bg-indigo-900 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('report')">
+          <div class="bg-indigo-600 p-2 rounded-lg text-white">
+            <i class="fa-solid fa-wrench text-xl"></i>
+          </div>
+          <div>
+            <span class="font-bold text-lg tracking-wide block leading-tight">Campus FixIt</span>
+            <span class="text-xs text-indigo-300">Electronic Issue Portal</span>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-4">
+          <nav class="flex space-x-1 sm:space-x-3">
+            <button id="nav-report" onclick="switchTab('report')" class="px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition bg-indigo-800 text-white shadow-inner">
+              <i class="fa-solid fa-plus-circle"></i>
+              <span class="hidden sm:inline">Report Issue</span>
+            </button>
+            <button id="nav-track" onclick="switchTab('track')" class="px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:text-white hover:bg-indigo-800 flex items-center space-x-2 transition">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <span class="hidden sm:inline">Track Status</span>
+            </button>
+            <button id="nav-admin" onclick="switchTab('admin')" class="px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:text-white hover:bg-indigo-800 flex items-center space-x-2 transition">
+              <i class="fa-solid fa-chart-line"></i>
+              <span class="hidden sm:inline">Admin Portal</span>
+            </button>
+          </nav>
+
+          <!-- User Session Status / Login Button -->
+          <div id="authHeaderContainer" class="flex items-center pl-2 sm:pl-3 border-l border-indigo-800">
+            <!-- Rendered dynamically by checkAuthSession() -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 border border-slate-700">
+    <div id="toast-icon" class="text-emerald-400 text-lg"><i class="fa-solid fa-circle-check"></i></div>
+    <div id="toast-msg" class="text-sm font-medium">Operation completed successfully.</div>
+  </div>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ==================== TAB 1: REPORT ISSUE ==================== -->
+    <section id="tab-report" class="block space-y-8">
+      <div class="bg-gradient-to-r from-indigo-800 to-purple-800 rounded-2xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl">
+          <span class="bg-indigo-500/30 text-indigo-200 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">Fast Campus Support</span>
+          <h1 class="text-3xl sm:text-4xl font-extrabold mt-3 tracking-tight">Encountering a technical problem on campus?</h1>
+          <p class="text-indigo-200 mt-2 text-sm sm:text-base">Submit reports for malfunctioning equipment or network outages. Our maintenance team will resolve it promptly.</p>
+        </div>
+        <i class="fa-solid fa-plug-circle-exclamation absolute -right-6 -bottom-6 text-9xl text-white/5 pointer-events-none"></i>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
+        <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center space-x-2 border-b pb-4 border-slate-100">
+          <i class="fa-solid fa-pen-to-square text-indigo-600"></i>
+          <span>Submit New Incident Report</span>
+        </h2>
+
+        <form id="issueForm" onsubmit="handleIssueSubmit(event)" class="space-y-6">
+          
+          <!-- Category Selection -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-3">Select Issue Category <span class="text-rose-500">*</span></label>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="categoryOptions">
+              
+              <label class="cursor-pointer">
+                <input type="radio" name="category" value="Computer" class="peer hidden" checked>
+                <div class="p-4 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 hover:border-slate-300 transition text-center flex flex-col items-center justify-center space-y-2 h-28">
+                  <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-desktop"></i>
+                  </div>
+                  <span class="font-semibold text-xs sm:text-sm text-slate-700">Computer</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="category" value="Projector" class="peer hidden">
+                <div class="p-4 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 hover:border-slate-300 transition text-center flex flex-col items-center justify-center space-y-2 h-28">
+                  <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-video"></i>
+                  </div>
+                  <span class="font-semibold text-xs sm:text-sm text-slate-700">Projector</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="category" value="Fan" class="peer hidden">
+                <div class="p-4 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 hover:border-slate-300 transition text-center flex flex-col items-center justify-center space-y-2 h-28">
+                  <div class="w-10 h-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-fan"></i>
+                  </div>
+                  <span class="font-semibold text-xs sm:text-sm text-slate-700">Fan</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="category" value="Light" class="peer hidden">
+                <div class="p-4 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 hover:border-slate-300 transition text-center flex flex-col items-center justify-center space-y-2 h-28">
+                  <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-lightbulb"></i>
+                  </div>
+                  <span class="font-semibold text-xs sm:text-sm text-slate-700">Light</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer col-span-2 sm:col-span-1">
+                <input type="radio" name="category" value="Wi-Fi" class="peer hidden">
+                <div class="p-4 rounded-xl border-2 border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 hover:border-slate-300 transition text-center flex flex-col items-center justify-center space-y-2 h-28">
+                  <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-wifi"></i>
+                  </div>
+                  <span class="font-semibold text-xs sm:text-sm text-slate-700">Wi-Fi</span>
+                </div>
+              </label>
+
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Location -->
+            <div>
+              <label for="location" class="block text-sm font-semibold text-slate-700 mb-2">Location / Room Number <span class="text-rose-500">*</span></label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <input type="text" id="location" required placeholder="e.g. Science Block, Lab 204 or Library 2nd Floor" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50 focus:bg-white transition">
+              </div>
+            </div>
+
+            <!-- Reporter Contact -->
+            <div>
+              <label for="reporter" class="block text-sm font-semibold text-slate-700 mb-2">Your Student / Staff ID or Name <span class="text-rose-500">*</span></label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <i class="fa-solid fa-user"></i>
+                </div>
+                <input type="text" id="reporter" required placeholder="e.g. CS-2024-089 or Dr. Smith" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50 focus:bg-white transition">
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label for="description" class="block text-sm font-semibold text-slate-700 mb-2">Detailed Issue Description <span class="text-rose-500">*</span></label>
+            <textarea id="description" required rows="4" placeholder="Describe what is wrong (e.g. Display shows flickering lines, ceiling fan making high sound, Wi-Fi router no internet signal)..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50 focus:bg-white transition resize-none"></textarea>
+          </div>
+
+          <!-- Upload Image -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-2">Attach Photo (Optional)</label>
+            <div class="relative">
+              <input type="file" id="photoInput" accept="image/*" onchange="handleImagePreview(event)" class="hidden">
+              <label for="photoInput" class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-6 hover:bg-slate-50/80 transition cursor-pointer text-center group">
+                <div id="uploadPlaceholder" class="flex flex-col items-center">
+                  <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center text-xl mb-2 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                  </div>
+                  <span class="text-sm font-medium text-slate-700">Click to upload photo or drag & drop</span>
+                  <span class="text-xs text-slate-400 mt-1">PNG, JPG or WEBP up to 5MB</span>
+                </div>
+                <div id="imagePreviewContainer" class="hidden flex-col items-center w-full">
+                  <img id="imagePreview" src="" alt="Preview" class="max-h-48 rounded-lg shadow-sm mb-3 object-contain">
+                  <span id="fileName" class="text-xs font-semibold text-slate-600">file-name.jpg</span>
+                  <button type="button" onclick="removeImage(event)" class="mt-2 text-xs text-rose-600 hover:text-rose-700 font-medium underline">Remove photo</button>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button type="submit" class="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 active:scale-95 transition shadow-lg shadow-indigo-200 flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Submit Complaint</span>
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: TRACK STATUS ==================== -->
+    <section id="tab-track" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
+        <h2 class="text-xl font-bold text-slate-800 mb-2">Track Complaint Status</h2>
+        <p class="text-slate-500 text-sm mb-6">Search using your unique Complaint Reference ID or filter by category.</p>
+
+        <!-- Search & Filter Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div class="sm:col-span-2 relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <input type="text" id="trackSearch" onkeyup="renderTrackList()" placeholder="Search by ID (e.g. FIX-8291) or Location..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+          </div>
+          <div>
+            <select id="trackFilterCategory" onchange="renderTrackList()" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+              <option value="ALL">All Categories</option>
+              <option value="Computer">Computer</option>
+              <option value="Projector">Projector</option>
+              <option value="Fan">Fan</option>
+              <option value="Light">Light</option>
+              <option value="Wi-Fi">Wi-Fi</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Issue Cards Container -->
+        <div id="trackList" class="space-y-4">
+          <!-- Dynamic Complaint Cards will render here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: ADMIN DASHBOARD ==================== -->
+    <section id="tab-admin" class="hidden space-y-8">
+      
+      <!-- Admin Access Restricted Notice (Shown for guests/students) -->
+      <div id="adminAuthGate" class="hidden bg-white rounded-3xl shadow-sm border border-slate-200/80 p-8 sm:p-12 text-center max-w-xl mx-auto my-6 space-y-5">
+        <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mx-auto shadow-inner">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <div class="space-y-2">
+          <h2 class="text-2xl font-bold text-slate-800 tracking-tight">Staff & Administrator Access Only</h2>
+          <p class="text-slate-500 text-sm leading-relaxed">
+            The Issue Management Console and analytics dashboard are restricted to campus maintenance technicians and system administrators.
+          </p>
+        </div>
+        <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-circle-info text-amber-600"></i>
+          <span>Students and guests can report issues and track tickets freely without logging in.</span>
+        </div>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <a href="login.html?redirect=admin&role=admin" class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-500/20 transition flex items-center justify-center space-x-2">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Sign In as Staff / Admin</span>
+          </a>
+          <button onclick="switchTab('report')" class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-sm transition">
+            Back to Report Issue
+          </button>
+        </div>
+      </div>
+
+      <!-- Authorized Admin Content -->
+      <div id="adminAuthorizedContent" class="space-y-8">
+      
+      <!-- Top Metrics -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+            <i class="fa-solid fa-folder-open"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Complaints</p>
+            <p id="statTotal" class="text-2xl font-bold text-slate-800">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Pending Issues</p>
+            <p id="statPending" class="text-2xl font-bold text-slate-800">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+            <i class="fa-solid fa-spinner"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">In Progress</p>
+            <p id="statProgress" class="text-2xl font-bold text-slate-800">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+            <i class="fa-solid fa-circle-check"></i>
+          </div>
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Resolved</p>
+            <p id="statResolved" class="text-2xl font-bold text-slate-800">0</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm lg:col-span-2">
+          <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+            <span>Issues by Category</span>
+            <i class="fa-solid fa-chart-column text-slate-400"></i>
+          </h3>
+          <div class="h-64 relative">
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+          <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center justify-between">
+            <span>Status Breakdown</span>
+            <i class="fa-solid fa-chart-pie text-slate-400"></i>
+          </h3>
+          <div class="h-64 relative flex items-center justify-center">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Management Table -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">Issue Management Console</h3>
+            <p class="text-slate-500 text-xs mt-0.5">Review, update, or assign tech support tickets</p>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <select id="adminStatusFilter" onchange="renderAdminTable()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="ALL">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+            </select>
+            <button onclick="exportCSV()" class="px-3.5 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
+              <i class="fa-solid fa-download"></i>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider border-b border-slate-100">
+                <th class="py-3.5 px-6">ID & Date</th>
+                <th class="py-3.5 px-6">Category</th>
+                <th class="py-3.5 px-6">Location</th>
+                <th class="py-3.5 px-6">Description</th>
+                <th class="py-3.5 px-6">Reporter</th>
+                <th class="py-3.5 px-6">Status</th>
+                <th class="py-3.5 px-6 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody" class="divide-y divide-slate-100 text-sm">
+              <!-- Admin rows rendered here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-500">
+    <p>Campus Electronic Issue Reporting & Tracking System &copy; 2026</p>
+  </footer>
+
+  <!-- Detail Modal for Photos / Full Info -->
+  <div id="modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="flex items-center space-x-3">
+        <span id="modalCategoryBadge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">Category</span>
+        <span id="modalId" class="text-xs font-mono text-slate-400">#FIX-0000</span>
+      </div>
+
+      <h3 id="modalLocation" class="text-xl font-bold text-slate-800">Building Name</h3>
+
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm text-slate-700">
+        <p class="font-semibold text-xs text-slate-400 uppercase tracking-wider mb-1">Issue Details</p>
+        <p id="modalDescription" class="whitespace-pre-line"></p>
+      </div>
+
+      <div id="modalImageContainer" class="hidden">
+        <p class="font-semibold text-xs text-slate-400 uppercase tracking-wider mb-2">Attached Photograph</p>
+        <img id="modalImage" src="" class="w-full h-auto max-h-60 object-contain rounded-xl border border-slate-200 bg-slate-900/5">
+      </div>
+
+      <div class="border-t border-slate-100 pt-4 flex items-center justify-between text-xs text-slate-500">
+        <div>
+          <span>Reported by: </span>
+          <span id="modalReporter" class="font-semibold text-slate-700">User</span>
+        </div>
+        <div id="modalDate">Oct 24, 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // Initial Mock Data
+    const INITIAL_ISSUES = [
+      {
+        id: "FIX-9201",
+        category: "Projector",
+        location: "Block B, Room 102",
+        reporter: "Prof. Alan Vance",
+        description: "Projector lamp flickers intensely and turns off after 5 minutes of usage during lectures.",
+        imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80",
+        status: "In Progress",
+        createdAt: "2026-10-15 09:30 AM",
+        notes: "Technician assigned to check display lamp unit."
+      },
+      {
+        id: "FIX-8432",
+        category: "Wi-Fi",
+        location: "Central Library 2nd Floor",
+        reporter: "STU-88219",
+        description: "No Wi-Fi signal detected near the quiet study zone section.",
+        imageUrl: null,
+        status: "Pending",
+        createdAt: "2026-10-16 11:15 AM",
+        notes: ""
+      },
+      {
+        id: "FIX-7109",
+        category: "Computer",
+        location: "Computer Lab 4, Workstation 12",
+        reporter: "Lab Manager",
+        description: "PC fails to boot up. Repeated blue screen memory error code on startup.",
+        imageUrl: null,
+        status: "Resolved",
+        createdAt: "2026-10-12 02:40 PM",
+        notes: "Replaced RAM stick and updated OS drivers."
+      },
+      {
+        id: "FIX-6554",
+        category: "Fan",
+        location: "Main Auditorium, Row C",
+        reporter: "Admin Staff",
+        description: "Ceiling fan making loud squeaking mechanical sound when set to high speed.",
+        imageUrl: null,
+        status: "Pending",
+        createdAt: "2026-10-17 08:00 AM",
+        notes: ""
+      },
+      {
+        id: "FIX-5021",
+        category: "Light",
+        location: "Engineering Building, Corridor 3",
+        reporter: "Security Staff",
+        description: "Overhead tube lights blown out creating dark area near fire exit.",
+        imageUrl: null,
+        status: "Resolved",
+        createdAt: "2026-10-10 04:20 PM",
+        notes: "Replaced dual LED tubes."
+      }
+    ];
+
+    // App State Management
+    let issues = JSON.parse(localStorage.getItem('campus_issues')) || INITIAL_ISSUES;
+    let currentUploadedImageBase64 = null;
+    let categoryChartInstance = null;
+    let statusChartInstance = null;
+
+    // Save to LocalStorage
+    function saveToStorage() {
+      localStorage.setItem('campus_issues', JSON.stringify(issues));
+    }
+
+    // User Authentication Session Management
+    function getCurrentUser() {
+      try {
+        const stored = localStorage.getItem('campus_user');
+        return stored ? JSON.parse(stored) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function checkAuthSession() {
+      const user = getCurrentUser();
+      const container = document.getElementById('authHeaderContainer');
+      if (!container) return;
+
+      if (user) {
+        let badgeColor = 'bg-indigo-600';
+        let roleName = 'Student';
+        let icon = 'fa-solid fa-graduation-cap';
+        let textRoleColor = 'text-indigo-300';
+
+        if (user.role === 'admin') {
+          badgeColor = 'bg-purple-600';
+          roleName = 'Administrator';
+          icon = 'fa-solid fa-shield-halved';
+          textRoleColor = 'text-purple-300';
+        } else if (user.role === 'staff') {
+          badgeColor = 'bg-emerald-600';
+          roleName = 'Staff / Tech';
+          icon = 'fa-solid fa-screwdriver-wrench';
+          textRoleColor = 'text-emerald-300';
+        }
+
+        container.innerHTML = `
+          <div class="flex items-center space-x-2 bg-indigo-950/80 py-1 px-2.5 rounded-xl border border-indigo-700/60 shadow-inner">
+            <div class="w-7 h-7 rounded-lg ${badgeColor} text-white flex items-center justify-center text-xs shrink-0">
+              <i class="${icon}"></i>
+            </div>
+            <div class="hidden md:block leading-tight text-left">
+              <div class="font-semibold text-slate-100 text-xs max-w-[120px] truncate">${user.name}</div>
+              <div class="text-[10px] ${textRoleColor} font-medium">${roleName}</div>
+            </div>
+            <button onclick="logoutUser()" title="Sign Out (${user.name})" class="ml-1 text-indigo-300 hover:text-rose-400 p-1 rounded-md hover:bg-indigo-900/50 transition">
+              <i class="fa-solid fa-right-from-bracket text-xs"></i>
+            </button>
+          </div>
+        `;
+
+        // Pre-fill reporter field if user is on the report tab and it's empty
+        const reporterField = document.getElementById('reporter');
+        if (reporterField && !reporterField.value) {
+          reporterField.value = user.id ? `${user.name} (${user.id})` : user.name;
+        }
+      } else {
+        container.innerHTML = `
+          <a href="login.html" class="inline-flex items-center space-x-1.5 py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition">
+            <i class="fa-solid fa-right-to-bracket text-xs"></i>
+            <span class="hidden sm:inline">Sign In</span>
+          </a>
+        `;
+      }
+    }
+
+    function logoutUser() {
+      localStorage.removeItem('campus_user');
+      showToast("Signed out successfully. Switched to guest mode.");
+      checkAuthSession();
+      // If currently on admin tab, refresh view to show lock gate
+      const adminTab = document.getElementById('tab-admin');
+      if (adminTab && !adminTab.classList.contains('hidden')) {
+        renderAdminDashboard();
+      }
+    }
+
+    // Tab Navigation Switcher
+    function switchTab(tabName) {
+      ['report', 'track', 'admin'].forEach(tab => {
+        const tabEl = document.getElementById(`tab-${tab}`);
+        const navEl = document.getElementById(`nav-${tab}`);
+        if (tab === tabName) {
+          tabEl.classList.remove('hidden');
+          navEl.className = "px-3 py-2 rounded-md text-sm font-medium flex items-center space-x-2 transition bg-indigo-800 text-white shadow-inner";
+        } else {
+          tabEl.classList.add('hidden');
+          navEl.className = "px-3 py-2 rounded-md text-sm font-medium text-indigo-200 hover:text-white hover:bg-indigo-800 flex items-center space-x-2 transition";
+        }
+      });
+
+      if (tabName === 'report') {
+        const user = getCurrentUser();
+        const reporterField = document.getElementById('reporter');
+        if (user && reporterField && !reporterField.value) {
+          reporterField.value = user.id ? `${user.name} (${user.id})` : user.name;
+        }
+      }
+      if (tabName === 'track') renderTrackList();
+      if (tabName === 'admin') {
+        renderAdminDashboard();
+      }
+    }
+
+    // Handle Image Preview
+    function handleImagePreview(event) {
+      const file = event.target.files[0];
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          showToast("File size must be under 5MB", "error");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          currentUploadedImageBase64 = e.target.result;
+          document.getElementById('imagePreview').src = e.target.result;
+          document.getElementById('fileName').innerText = file.name;
+          document.getElementById('uploadPlaceholder').classList.add('hidden');
+          document.getElementById('imagePreviewContainer').classList.remove('hidden');
+          document.getElementById('imagePreviewContainer').classList.add('flex');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function removeImage(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById('photoInput').value = '';
+      currentUploadedImageBase64 = null;
+      document.getElementById('uploadPlaceholder').classList.remove('hidden');
+      document.getElementById('imagePreviewContainer').classList.add('hidden');
+      document.getElementById('imagePreviewContainer').classList.remove('flex');
+    }
+
+    // Submit Issue Handler
+    function handleIssueSubmit(event) {
+      event.preventDefault();
+
+      const category = document.querySelector('input[name="category"]:checked').value;
+      const location = document.getElementById('location').value.trim();
+      const reporter = document.getElementById('reporter').value.trim();
+      const description = document.getElementById('description').value.trim();
+
+      const newId = `FIX-${Math.floor(1000 + Math.random() * 9000)}`;
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + 
+                            ' ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      const newIssue = {
+        id: newId,
+        category,
+        location,
+        reporter,
+        description,
+        imageUrl: currentUploadedImageBase64,
+        status: "Pending",
+        createdAt: formattedDate,
+        notes: ""
+      };
+
+      issues.unshift(newIssue);
+      saveToStorage();
+
+      // Reset form
+      document.getElementById('issueForm').reset();
+      removeImage(event);
+      
+      showToast(`Complaint #${newId} logged successfully!`);
+      
+      // Auto redirect to track tab with prefilled search
+      switchTab('track');
+      document.getElementById('trackSearch').value = newId;
+      renderTrackList();
+    }
+
+    // Category Color & Icon Mapper
+    function getCategoryBadge(category) {
+      const map = {
+        'Computer': { bg: 'bg-blue-100', text: 'text-blue-700', icon: 'fa-desktop' },
+        'Projector': { bg: 'bg-purple-100', text: 'text-purple-700', icon: 'fa-video' },
+        'Fan': { bg: 'bg-teal-100', text: 'text-teal-700', icon: 'fa-fan' },
+        'Light': { bg: 'bg-amber-100', text: 'text-amber-700', icon: 'fa-lightbulb' },
+        'Wi-Fi': { bg: 'bg-emerald-100', text: 'text-emerald-700', icon: 'fa-wifi' },
+      };
+      const item = map[category] || { bg: 'bg-slate-100', text: 'text-slate-700', icon: 'fa-wrench' };
+      return `<span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${item.bg} ${item.text}">
+                <i class="fa-solid ${item.icon}"></i>
+                <span>${category}</span>
+              </span>`;
+    }
+
+    // Status Badge Mapper
+    function getStatusBadge(status) {
+      if (status === 'Pending') {
+        return `<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                  <i class="fa-regular fa-clock"></i><span>Pending</span>
+                </span>`;
+      } else if (status === 'In Progress') {
+        return `<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                  <i class="fa-solid fa-spinner animate-spin"></i><span>In Progress</span>
+                </span>`;
+      } else {
+        return `<span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <i class="fa-solid fa-circle-check"></i><span>Resolved</span>
+                </span>`;
+      }
+    }
+
+    // Render Track Issues List
+    function renderTrackList() {
+      const container = document.getElementById('trackList');
+      const search = document.getElementById('trackSearch').value.toLowerCase();
+      const catFilter = document.getElementById('trackFilterCategory').value;
+
+      const filtered = issues.filter(item => {
+        const matchesSearch = item.id.toLowerCase().includes(search) || 
+                              item.location.toLowerCase().includes(search) ||
+                              item.description.toLowerCase().includes(search);
+        const matchesCategory = catFilter === 'ALL' || item.category === catFilter;
+        return matchesSearch && matchesCategory;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 border-2 border-dashed border-slate-200 rounded-2xl">
+            <i class="fa-solid fa-folder-open text-4xl text-slate-300 mb-3 block"></i>
+            <p class="text-slate-500 font-medium text-sm">No complaint records found.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => `
+        <div class="bg-slate-50 hover:bg-white p-5 rounded-2xl border border-slate-200/80 transition duration-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
+            <div class="flex items-center space-x-3">
+              <span class="font-mono text-sm font-bold text-slate-900">${item.id}</span>
+              ${getCategoryBadge(item.category)}
+            </div>
+            <div>
+              ${getStatusBadge(item.status)}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2 space-y-2">
+              <p class="font-bold text-slate-800 text-base flex items-center space-x-2">
+                <i class="fa-solid fa-location-dot text-indigo-500 text-sm"></i>
+                <span>${item.location}</span>
+              </p>
+              <p class="text-slate-600 text-sm line-clamp-2">${item.description}</p>
+            </div>
+
+            <div class="flex flex-col justify-between items-start md:items-end text-xs text-slate-400 space-y-2">
+              <span>Reported: ${item.createdAt}</span>
+              ${item.imageUrl ? `
+                <button onclick="openModal('${item.id}')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 transition">
+                  <i class="fa-solid fa-image"></i>
+                  <span>View Attachment</span>
+                </button>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Progress Workflow Bar -->
+          <div class="pt-2">
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-400 mb-1">
+              <span class="${item.status === 'Pending' || item.status === 'In Progress' || item.status === 'Resolved' ? 'text-indigo-600' : ''}">Logged</span>
+              <span class="${item.status === 'In Progress' || item.status === 'Resolved' ? 'text-indigo-600' : ''}">In Progress</span>
+              <span class="${item.status === 'Resolved' ? 'text-emerald-600' : ''}">Resolved</span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden flex">
+              <div class="h-full bg-indigo-600 transition-all duration-500 ${
+                item.status === 'Pending' ? 'w-1/3' : item.status === 'In Progress' ? 'w-2/3' : 'w-full bg-emerald-500'
+              }"></div>
+            </div>
+          </div>
+          
+          ${item.notes ? `
+            <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50 text-xs text-indigo-900 flex items-start space-x-2">
+              <i class="fa-solid fa-circle-info text-indigo-500 mt-0.5"></i>
+              <div><strong class="font-semibold">Technician Note:</strong> ${item.notes}</div>
+            </div>
+          ` : ''}
+
+        </div>
+      `).join('');
+    }
+
+    // Render Admin Dashboard
+    function renderAdminDashboard() {
+      const user = getCurrentUser();
+      const authGate = document.getElementById('adminAuthGate');
+      const authorizedContent = document.getElementById('adminAuthorizedContent');
+
+      // Restrict access to staff and admin only
+      if (!user || (user.role !== 'admin' && user.role !== 'staff')) {
+        if (authGate) authGate.classList.remove('hidden');
+        if (authorizedContent) authorizedContent.classList.add('hidden');
+        return;
+      }
+
+      if (authGate) authGate.classList.add('hidden');
+      if (authorizedContent) authorizedContent.classList.remove('hidden');
+
+      // Calculate Stats
+      const total = issues.length;
+      const pending = issues.filter(i => i.status === 'Pending').length;
+      const progress = issues.filter(i => i.status === 'In Progress').length;
+      const resolved = issues.filter(i => i.status === 'Resolved').length;
+
+      document.getElementById('statTotal').innerText = total;
+      document.getElementById('statPending').innerText = pending;
+      document.getElementById('statProgress').innerText = progress;
+      document.getElementById('statResolved').innerText = resolved;
+
+      renderAdminTable();
+      renderCharts(pending, progress, resolved);
+    }
+
+    // Render Admin Table
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminTableBody');
+      const filter = document.getElementById('adminStatusFilter').value;
+
+      const filtered = issues.filter(i => filter === 'ALL' || i.status === filter);
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">No records found</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(item => `
+        <tr class="hover:bg-slate-50/80 transition">
+          <td class="py-4 px-6">
+            <div class="font-mono font-bold text-slate-800">${item.id}</div>
+            <div class="text-xs text-slate-400">${item.createdAt}</div>
+          </td>
+          <td class="py-4 px-6">${getCategoryBadge(item.category)}</td>
+          <td class="py-4 px-6 font-medium text-slate-700">${item.location}</td>
+          <td class="py-4 px-6 max-w-xs">
+            <p class="truncate text-slate-600 text-xs">${item.description}</p>
+            ${item.imageUrl ? `<button onclick="openModal('${item.id}')" class="text-[11px] text-indigo-600 hover:underline font-medium"><i class="fa-solid fa-paperclip"></i> Photo Attached</button>` : ''}
+          </td>
+          <td class="py-4 px-6 text-slate-600 text-xs">${item.reporter}</td>
+          <td class="py-4 px-6">
+            <select onchange="updateStatus('${item.id}', this.value)" class="px-2.5 py-1.5 rounded-lg border text-xs font-semibold focus:outline-none ${
+              item.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+              item.status === 'In Progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+              'bg-emerald-50 text-emerald-700 border-emerald-200'
+            }">
+              <option value="Pending" ${item.status === 'Pending' ? 'selected' : ''}>Pending</option>
+              <option value="In Progress" ${item.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+              <option value="Resolved" ${item.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+            </select>
+          </td>
+          <td class="py-4 px-6 text-right space-x-2">
+            <button onclick="addNote('${item.id}')" title="Add Admin Note" class="p-2 text-slate-400 hover:text-indigo-600 transition">
+              <i class="fa-solid fa-comment-dots"></i>
+            </button>
+            <button onclick="deleteIssue('${item.id}')" title="Delete Issue" class="p-2 text-slate-400 hover:text-rose-600 transition">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Update Issue Status
+    function updateStatus(id, newStatus) {
+      const issue = issues.find(i => i.id === id);
+      if (issue) {
+        issue.status = newStatus;
+        saveToStorage();
+        showToast(`Updated #${id} status to ${newStatus}`);
+        renderAdminDashboard();
+      }
+    }
+
+    // Add Technician Note
+    function addNote(id) {
+      const issue = issues.find(i => i.id === id);
+      if (issue) {
+        const note = prompt("Enter resolution or technician update note:", issue.notes || "");
+        if (note !== null) {
+          issue.notes = note.trim();
+          saveToStorage();
+          showToast("Note attached to complaint");
+          renderAdminDashboard();
+        }
+      }
+    }
+
+    // Delete Issue (Admin Only)
+    function deleteIssue(id) {
+      const user = getCurrentUser();
+      if (!user || user.role !== 'admin') {
+        showToast("Access Denied: Only administrators can delete complaints.", "error");
+        return;
+      }
+
+      if (confirm(`Are you sure you want to delete complaint #${id}?`)) {
+        issues = issues.filter(i => i.id !== id);
+        saveToStorage();
+        showToast(`Deleted #${id}`);
+        renderAdminDashboard();
+      }
+    }
+
+    // Render Chart.js Analytics
+    function renderCharts(pending, progress, resolved) {
+      // Category Breakdown Data
+      const categories = ['Computer', 'Projector', 'Fan', 'Light', 'Wi-Fi'];
+      const categoryCounts = categories.map(cat => issues.filter(i => i.category === cat).length);
+
+      // Category Bar Chart
+      const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+      if (categoryChartInstance) categoryChartInstance.destroy();
+
+      categoryChartInstance = new Chart(ctxCategory, {
+        type: 'bar',
+        data: {
+          labels: categories,
+          datasets: [{
+            label: 'Complaints',
+            data: categoryCounts,
+            backgroundColor: ['#3b82f6', '#a855f7', '#14b8a6', '#f59e0b', '#10b981'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+
+      // Status Doughnut Chart
+      const ctxStatus = document.getElementById('statusChart').getContext('2d');
+      if (statusChartInstance) statusChartInstance.destroy();
+
+      statusChartInstance = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+          labels: ['Pending', 'In Progress', 'Resolved'],
+          datasets: [{
+            data: [pending, progress, resolved],
+            backgroundColor: ['#f59e0b', '#3b82f6', '#10b981'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          },
+          cutout: '70%'
+        }
+      });
+    }
+
+    // Modal Operations
+    function openModal(id) {
+      const issue = issues.find(i => i.id === id);
+      if (!issue) return;
+
+      document.getElementById('modalId').innerText = `#${issue.id}`;
+      document.getElementById('modalCategoryBadge').innerText = issue.category;
+      document.getElementById('modalLocation').innerText = issue.location;
+      document.getElementById('modalDescription').innerText = issue.description;
+      document.getElementById('modalReporter').innerText = issue.reporter;
+      document.getElementById('modalDate').innerText = issue.createdAt;
+
+      const imgContainer = document.getElementById('modalImageContainer');
+      const img = document.getElementById('modalImage');
+
+      if (issue.imageUrl) {
+        img.src = issue.imageUrl;
+        imgContainer.classList.remove('hidden');
+      } else {
+        imgContainer.classList.add('hidden');
+      }
+
+      document.getElementById('modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+    }
+
+    // Export Data as CSV
+    function exportCSV() {
+      if (issues.length === 0) {
+        showToast("No data to export", "error");
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,ID,Category,Location,Reporter,Status,Date,Description\n";
+      issues.forEach(i => {
+        const row = `"${i.id}","${i.category}","${i.location.replace(/"/g, '""')}","${i.reporter}","${i.status}","${i.createdAt}","${i.description.replace(/"/g, '""')}"`;
+        csvContent += row + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `campus_issues_report_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Helper Toast Notification
+    function showToast(message, type = "success") {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+
+      toastMsg.innerText = message;
+      if (type === "error") {
+        toastIcon.className = "text-rose-400 text-lg";
+        toastIcon.innerHTML = `<i class="fa-solid fa-circle-xmark"></i>`;
+      } else {
+        toastIcon.className = "text-emerald-400 text-lg";
+        toastIcon.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    // Initial Load
+    window.addEventListener('DOMContentLoaded', () => {
+      saveToStorage();
+      checkAuthSession();
+
+      // Check URL parameters or hash for preselected tab (e.g. index.html?tab=admin or index.html#admin)
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') || window.location.hash.replace('#', '');
+      if (['report', 'track', 'admin'].includes(tabParam)) {
+        switchTab(tabParam);
+      }
+    });
+  </script>
+</body>
+</html>
+

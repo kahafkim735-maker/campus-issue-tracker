@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Campus FixIt Portal</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col justify-between font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-indigo-900 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="index.html" class="flex items-center space-x-3 group">
+          <div class="bg-indigo-600 p-2 rounded-lg text-white group-hover:bg-indigo-500 transition">
+            <i class="fa-solid fa-wrench text-xl"></i>
+          </div>
+          <div>
+            <span class="font-bold text-lg tracking-wide block leading-tight">Campus FixIt</span>
+            <span class="text-xs text-indigo-300">Electronic Issue Portal</span>
+          </div>
+        </a>
+
+        <a href="index.html" class="text-xs sm:text-sm font-medium text-indigo-200 hover:text-white flex items-center space-x-1.5 py-1.5 px-3 rounded-lg hover:bg-indigo-800/60 transition">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Continue as Guest</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center space-x-3 border border-slate-700">
+    <div id="toast-icon" class="text-emerald-400 text-lg"><i class="fa-solid fa-circle-check"></i></div>
+    <div id="toast-msg" class="text-sm font-medium">Signed in successfully.</div>
+  </div>
+
+  <!-- Main Login Card Section -->
+  <main class="flex-grow flex items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md">
+
+      <!-- Authentication Card -->
+      <div id="loginCard" class="bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-200/80 p-6 sm:p-8 relative overflow-hidden transition-all duration-300">
+        
+        <!-- Subtle Top Accent bar -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800"></div>
+
+        <!-- Header -->
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 text-xl mb-3 shadow-inner">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Welcome Back</h1>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1">Sign in to your campus account to continue</p>
+        </div>
+
+        <!-- Role Selector Tabs -->
+        <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl mb-6 text-xs font-semibold" role="tablist" aria-label="Sign-in role selection">
+          <button type="button" id="role-student" onclick="setRole('student')" class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center space-x-1.5 bg-white text-indigo-700 shadow-sm" role="tab" aria-selected="true">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Student</span>
+          </button>
+          <button type="button" id="role-staff" onclick="setRole('staff')" class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center space-x-1.5 text-slate-600 hover:text-slate-900" role="tab" aria-selected="false">
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+            <span>Staff</span>
+          </button>
+          <button type="button" id="role-admin" onclick="setRole('admin')" class="py-2 px-2 rounded-lg text-center transition flex items-center justify-center space-x-1.5 text-slate-600 hover:text-slate-900" role="tab" aria-selected="false">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Admin</span>
+          </button>
+        </div>
+
+        <!-- Error Message Alert -->
+        <div id="errorAlert" class="hidden mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center space-x-2.5">
+          <i class="fa-solid fa-circle-exclamation text-rose-500 shrink-0 text-sm"></i>
+          <span id="errorMessage">Invalid email or password. Please try again.</span>
+        </div>
+
+        <!-- Sign-In Form -->
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4" novalidate>
+          
+          <!-- Username / Email Field -->
+          <div>
+            <label for="usernameInput" id="usernameLabel" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Student ID or Name <span class="text-rose-500">*</span>
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i id="usernameIcon" class="fa-solid fa-id-card"></i>
+              </div>
+              <input
+                type="text"
+                id="usernameInput"
+                name="username"
+                autocomplete="username"
+                required
+                enterkeyhint="next"
+                placeholder="e.g. STU-2026 or Alex Johnson"
+                class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50 focus:bg-white transition"
+              >
+            </div>
+            <p id="usernameHint" class="text-[11px] text-slate-400 mt-1">Students can sign in directly using their Student ID or Name.</p>
+          </div>
+
+          <!-- Password Field (Required for Staff and Admin, Optional for Student) -->
+          <div id="passwordContainer" class="hidden">
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="current-password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Password <span class="text-rose-500">*</span>
+              </label>
+              <a href="#" onclick="forgotPasswordNotice(event)" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-medium hover:underline">Forgot?</a>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <input
+                type="password"
+                id="current-password"
+                name="password"
+                autocomplete="current-password"
+                enterkeyhint="done"
+                placeholder="Enter your account password"
+                class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50 focus:bg-white transition"
+              >
+              <button
+                type="button"
+                id="togglePasswordBtn"
+                onclick="togglePasswordVisibility()"
+                title="Toggle password visibility"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition"
+              >
+                <i id="passwordEyeIcon" class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Department / Program field (Student role specific) -->
+          <div id="studentDeptContainer">
+            <label for="studentDept" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Faculty / Department (Optional)
+            </label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fa-solid fa-building-columns"></i>
+              </div>
+              <select id="studentDept" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50 focus:bg-white transition">
+                <option value="Computer Science & IT">Computer Science & IT</option>
+                <option value="School of Engineering">School of Engineering</option>
+                <option value="Business & Management">Business & Management</option>
+                <option value="Natural Sciences">Natural Sciences</option>
+                <option value="Humanities & Arts">Humanities & Arts</option>
+                <option value="General Campus User">General Campus User</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Remember Me & Terms -->
+          <div class="flex items-center justify-between text-xs pt-1">
+            <label class="flex items-center space-x-2 cursor-pointer text-slate-600">
+              <input type="checkbox" id="rememberMe" checked class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+              <span>Remember this session</span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button
+              type="submit"
+              id="submitBtn"
+              class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm shadow-lg shadow-indigo-500/25 transition duration-150 flex items-center justify-center space-x-2"
+            >
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span id="submitBtnText">Sign In as Student</span>
+            </button>
+          </div>
+
+        </form>
+
+        <!-- Quick Demo Credentials Box -->
+        <div class="mt-6 pt-5 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Quick Fill Demo Accounts</span>
+            <span class="text-[10px] text-slate-400">One-click test</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="fillDemo('student')" class="px-2 py-1.5 rounded-lg border border-slate-200 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50 text-[11px] font-medium text-slate-700 hover:text-indigo-700 transition text-center truncate">
+              🎓 Student
+            </button>
+            <button type="button" onclick="fillDemo('staff')" class="px-2 py-1.5 rounded-lg border border-slate-200 hover:border-emerald-400 bg-slate-50 hover:bg-emerald-50 text-[11px] font-medium text-slate-700 hover:text-emerald-700 transition text-center truncate">
+              🛠️ Staff
+            </button>
+            <button type="button" onclick="fillDemo('admin')" class="px-2 py-1.5 rounded-lg border border-slate-200 hover:border-purple-400 bg-slate-50 hover:bg-purple-50 text-[11px] font-medium text-slate-700 hover:text-purple-700 transition text-center truncate">
+              🛡️ Admin
+            </button>
+          </div>
+        </div>
+
+        <!-- Back to tracker guest link -->
+        <div class="mt-5 text-center">
+          <a href="index.html" class="text-xs text-slate-500 hover:text-indigo-600 font-medium transition inline-flex items-center space-x-1">
+            <span>Skip sign-in and continue as guest</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Footer Info -->
+      <p class="text-center text-xs text-slate-400 mt-6">
+        Campus FixIt Authentication System &bull; Secure Access
+      </p>
+
+    </div>
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+    Campus Electronic Issue Reporting & Tracking System &copy; 2026
+  </footer>
+
+  <!-- Script for Authentication Logic -->
+  <script>
+    // Demo Registered Accounts
+    const DEMO_ACCOUNTS = {
+      admin: {
+        username: "admin@campus.edu",
+        password: "admin123",
+        role: "admin",
+        name: "Campus System Admin",
+        title: "IT Operations Director"
+      },
+      staff: {
+        username: "technician@campus.edu",
+        password: "tech123",
+        role: "staff",
+        name: "Dave Miller",
+        title: "Senior Electrical Technician"
+      },
+      student: {
+        username: "STU-2026",
+        name: "Alex Johnson",
+        role: "student",
+        dept: "Computer Science & IT"
+      }
+    };
+
+    let currentRole = 'student';
+
+    // Parse URL params for preselection or redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectTarget = urlParams.get('redirect') || 'index.html';
+    const preselectedRole = urlParams.get('role');
+
+    // Role switcher
+    function setRole(role) {
+      currentRole = role;
+      clearError();
+
+      const tabs = ['student', 'staff', 'admin'];
+      tabs.forEach(r => {
+        const btn = document.getElementById(`role-${r}`);
+        if (r === role) {
+          btn.className = "py-2 px-2 rounded-lg text-center transition flex items-center justify-center space-x-1.5 bg-white text-indigo-700 shadow-sm";
+          btn.setAttribute('aria-selected', 'true');
+        } else {
+          btn.className = "py-2 px-2 rounded-lg text-center transition flex items-center justify-center space-x-1.5 text-slate-600 hover:text-slate-900";
+          btn.setAttribute('aria-selected', 'false');
+        }
+      });
+
+      const usernameInput = document.getElementById('usernameInput');
+      const usernameLabel = document.getElementById('usernameLabel');
+      const usernameIcon = document.getElementById('usernameIcon');
+      const usernameHint = document.getElementById('usernameHint');
+      const passwordContainer = document.getElementById('passwordContainer');
+      const passwordInput = document.getElementById('current-password');
+      const studentDeptContainer = document.getElementById('studentDeptContainer');
+      const submitBtnText = document.getElementById('submitBtnText');
+
+      if (role === 'student') {
+        usernameLabel.innerHTML = 'Student ID or Name <span class="text-rose-500">*</span>';
+        usernameInput.type = 'text';
+        usernameInput.placeholder = 'e.g. STU-2026 or Alex Johnson';
+        usernameIcon.className = 'fa-solid fa-id-card';
+        usernameHint.innerText = 'Students can sign in directly using their Student ID or Name.';
+        passwordContainer.classList.add('hidden');
+        passwordInput.removeAttribute('required');
+        studentDeptContainer.classList.remove('hidden');
+        submitBtnText.innerText = 'Sign In as Student';
+      } else if (role === 'staff') {
+        usernameLabel.innerHTML = 'Staff Email or ID <span class="text-rose-500">*</span>';
+        usernameInput.type = 'email';
+        usernameInput.placeholder = 'technician@campus.edu';
+        usernameIcon.className = 'fa-solid fa-envelope';
+        usernameHint.innerText = 'Campus maintenance & electrical technician portal.';
+        passwordContainer.classList.remove('hidden');
+        passwordInput.setAttribute('required', 'required');
+        studentDeptContainer.classList.add('hidden');
+        submitBtnText.innerText = 'Sign In as Staff / Technician';
+      } else if (role === 'admin') {
+        usernameLabel.innerHTML = 'Admin Email <span class="text-rose-500">*</span>';
+        usernameInput.type = 'email';
+        usernameInput.placeholder = 'admin@campus.edu';
+        usernameIcon.className = 'fa-solid fa-user-gear';
+        usernameHint.innerText = 'Full system control, issue assignments, and analytics.';
+        passwordContainer.classList.remove('hidden');
+        passwordInput.setAttribute('required', 'required');
+        studentDeptContainer.classList.add('hidden');
+        submitBtnText.innerText = 'Sign In as Administrator';
+      }
+    }
+
+    // Toggle password visibility
+    function togglePasswordVisibility() {
+      const passwordInput = document.getElementById('current-password');
+      const eyeIcon = document.getElementById('passwordEyeIcon');
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.className = 'fa-regular fa-eye-slash text-indigo-600';
+      } else {
+        passwordInput.type = 'password';
+        eyeIcon.className = 'fa-regular fa-eye text-slate-400';
+      }
+    }
+
+    // Quick fill demo accounts
+    function fillDemo(role) {
+      setRole(role);
+      const acc = DEMO_ACCOUNTS[role];
+      const usernameInput = document.getElementById('usernameInput');
+      const passwordInput = document.getElementById('current-password');
+
+      usernameInput.value = acc.username;
+      if (role !== 'student') {
+        passwordInput.value = acc.password;
+      }
+      clearError();
+      showToast(`Prefilled ${role.toUpperCase()} credentials`);
+    }
+
+    // Handle Form Submission
+    function handleLogin(event) {
+      event.preventDefault();
+      clearError();
+
+      const usernameVal = document.getElementById('usernameInput').value.trim();
+      const passwordVal = document.getElementById('current-password').value;
+      const deptVal = document.getElementById('studentDept').value;
+
+      if (!usernameVal) {
+        showError("Please enter your Student ID, Name, or Email.");
+        document.getElementById('usernameInput').focus();
+        return;
+      }
+
+      let authenticatedUser = null;
+
+      if (currentRole === 'student') {
+        // Students can authenticate by ID or Name
+        authenticatedUser = {
+          role: 'student',
+          name: usernameVal,
+          id: usernameVal.startsWith('STU-') ? usernameVal : `STU-${Math.floor(1000 + Math.random() * 9000)}`,
+          dept: deptVal,
+          email: `${usernameVal.toLowerCase().replace(/\s+/g, '.')}@campus.edu`,
+          loginTime: new Date().toISOString()
+        };
+      } else if (currentRole === 'staff') {
+        const staffAcc = DEMO_ACCOUNTS.staff;
+        if (
+          (usernameVal.toLowerCase() === staffAcc.username.toLowerCase() || usernameVal.toLowerCase() === 'technician') &&
+          passwordVal === staffAcc.password
+        ) {
+          authenticatedUser = {
+            role: 'staff',
+            name: staffAcc.name,
+            title: staffAcc.title,
+            id: 'STAFF-501',
+            email: staffAcc.username,
+            loginTime: new Date().toISOString()
+          };
+        } else {
+          showError("Invalid staff credentials. (Tip: Use Quick Fill or technician@campus.edu / tech123)");
+          return;
+        }
+      } else if (currentRole === 'admin') {
+        const adminAcc = DEMO_ACCOUNTS.admin;
+        if (
+          (usernameVal.toLowerCase() === adminAcc.username.toLowerCase() || usernameVal.toLowerCase() === 'admin') &&
+          passwordVal === adminAcc.password
+        ) {
+          authenticatedUser = {
+            role: 'admin',
+            name: adminAcc.name,
+            title: adminAcc.title,
+            id: 'ADMIN-001',
+            email: adminAcc.username,
+            loginTime: new Date().toISOString()
+          };
+        } else {
+          showError("Invalid admin credentials. (Tip: Use Quick Fill or admin@campus.edu / admin123)");
+          return;
+        }
+      }
+
+      if (authenticatedUser) {
+        // Save to localStorage
+        localStorage.setItem('campus_user', JSON.stringify(authenticatedUser));
+        showToast(`Welcome back, ${authenticatedUser.name}!`);
+
+        // Disable submit button during transition
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i><span>Signing in...</span>`;
+
+        setTimeout(() => {
+          let destination = redirectTarget;
+          if (destination === 'admin') {
+            destination = 'index.html?tab=admin';
+          }
+          window.location.href = destination;
+        }, 700);
+      }
+    }
+
+    function showError(msg) {
+      const errorAlert = document.getElementById('errorAlert');
+      const errorMessage = document.getElementById('errorMessage');
+      const card = document.getElementById('loginCard');
+
+      errorMessage.innerText = msg;
+      errorAlert.classList.remove('hidden');
+      
+      // Trigger subtle shake animation
+      card.classList.remove('shake');
+      void card.offsetWidth; // trigger reflow
+      card.classList.add('shake');
+    }
+
+    function clearError() {
+      const errorAlert = document.getElementById('errorAlert');
+      errorAlert.classList.add('hidden');
+    }
+
+    function forgotPasswordNotice(e) {
+      e.preventDefault();
+      alert("Password Reset\n\nFor demo purposes, the credentials are:\n• Admin: admin@campus.edu / admin123\n• Staff: technician@campus.edu / tech123\n\nOr click the Quick Fill buttons below!");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.innerText = message;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Auto-detect role parameter on load
+    window.addEventListener('DOMContentLoaded', () => {
+      if (preselectedRole && ['student', 'staff', 'admin'].includes(preselectedRole)) {
+        setRole(preselectedRole);
+      } else {
+        setRole('student');
+      }
+    });
+  </script>
+</body>
+</html>
+
